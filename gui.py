@@ -533,7 +533,7 @@ class EmbedWidgetILSC(QWidget):
     def init_ui(self):
         layout = QVBoxLayout()
 
-        title = QLabel("UNICODE For Hiding Information In A Text Document\n[EMBED]")
+        title = QLabel("Text Steganography on Sundanese Script using Improved Line Shift Coding\n[EMBED]")
         title.setFont(QFont("Arial", 16, QFont.Bold))
         title.setAlignment(Qt.AlignCenter)
         layout.addWidget(title)
@@ -607,19 +607,21 @@ class EmbedWidgetILSC(QWidget):
             return
 
         try:
+            # TODO: replace
             output_doc = embed_message_us(cover, secret)
 
             file_path, _ = QFileDialog.getSaveFileName(
                 self,
                 "Save stego file",
                 "",
-                "Word Documents (*.docx)"
+                "Portable Document Format (*.pdf)"
             )
 
             if file_path:
                 try:
-                    if not file_path.endswith(".docx"):
-                        file_path += ".docx"
+                    if not file_path.endswith(".pdf"):
+                        file_path += ".pdf"
+                    # TODO: replace
                     output_doc.save(file_path)
                     QMessageBox.information(
                         self, "Success", f"File saved:\n{file_path}"
@@ -641,7 +643,7 @@ class ExtractWidgetILSC(QWidget):
     def init_ui(self):
         layout = QVBoxLayout()
 
-        title = QLabel("UNICODE For Hiding Information In A Text Document\n[EXTRACT]")
+        title = QLabel("Text Steganography on Sundanese Script using Improved Line Shift Coding\n[EXTRACT]")
         title.setFont(QFont("Arial", 16, QFont.Bold))
         title.setAlignment(Qt.AlignCenter)
         layout.addWidget(title)
@@ -705,10 +707,15 @@ class ExtractWidgetILSC(QWidget):
 
     def load_stego_file(self):
         file_path, _ = QFileDialog.getOpenFileName(
-            self, "Choose stego file", "", "Word Documents (*.docx)"
+            self,
+            "Choose stego file",
+            "",
+            "Portable Document Format (*.pdf)",
         )
+
         if file_path:
             try:
+                # TODO: replace
                 docx = Document(file_path)
                 for p in docx.paragraphs:
                     if self.input_text is None:
@@ -725,6 +732,7 @@ class ExtractWidgetILSC(QWidget):
             return
 
         try:
+            # TODO: replace
             secret_message = extract_message_us(self.input_text)
 
             self.extracted_message.setPlainText(secret_message)

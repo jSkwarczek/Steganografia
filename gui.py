@@ -759,11 +759,13 @@ class MainWindow(QMainWindow):
         self.stack.addWidget(self.extract_widget_epa)
         self.stack.addWidget(self.embed_widget_us)
         self.stack.addWidget(self.extract_widget_us)
+        self.stack.addWidget(self.embed_widget_ilsc)
+        self.stack.addWidget(self.extract_widget_ilsc)
 
         self.method_selection.method1_btn.clicked.connect(self.show_embed_epa)
         self.method_selection.method2_btn.clicked.connect(self.show_embed_us)
+        self.method_selection.method3_btn.clicked.connect(self.show_embed_ilsc)
 
-        self.method_selection.method3_btn.clicked.connect(self.show_embed_epa)
         self.method_selection.method4_btn.clicked.connect(self.show_embed_epa)
         self.method_selection.method5_btn.clicked.connect(self.show_embed_epa)
         self.method_selection.method6_btn.clicked.connect(self.show_embed_epa)
@@ -772,10 +774,16 @@ class MainWindow(QMainWindow):
         self.embed_widget_epa.extract_btn.clicked.connect(self.show_extract_epa)
         self.extract_widget_epa.back_btn.clicked.connect(self.show_method_selection)
         self.extract_widget_epa.embed_btn.clicked.connect(self.show_embed_epa)
+
         self.embed_widget_us.back_btn.clicked.connect(self.show_method_selection)
         self.embed_widget_us.extract_btn.clicked.connect(self.show_extract_us)
         self.extract_widget_us.back_btn.clicked.connect(self.show_method_selection)
         self.extract_widget_us.embed_btn.clicked.connect(self.show_embed_us)
+
+        self.embed_widget_ilsc.back_btn.clicked.connect(self.show_method_selection)
+        self.embed_widget_ilsc.extract_btn.clicked.connect(self.show_extract_ilsc)
+        self.extract_widget_ilsc.back_btn.clicked.connect(self.show_method_selection)
+        self.extract_widget_ilsc.embed_btn.clicked.connect(self.show_embed_ilsc)
 
         self.show_method_selection()
 
@@ -797,6 +805,12 @@ class MainWindow(QMainWindow):
 
     def show_extract_us(self):
         self.stack.setCurrentWidget(self.extract_widget_us)
+
+    def show_embed_ilsc(self):
+        self.stack.setCurrentWidget(self.embed_widget_ilsc)
+
+    def show_extract_ilsc(self):
+        self.stack.setCurrentWidget(self.extract_widget_ilsc)
 
 
 def main():

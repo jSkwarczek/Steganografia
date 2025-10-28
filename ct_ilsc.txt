@@ -1,0 +1,60 @@
+To jest przykładowy tekst okładkowy.
+Może zawierać polskie znaki: ąćęłńóśźż.
+Ta linia będzie służyć jako przykład.
+Kolejna linia tekstu normalnego.
+Piąta linia to drugi pivot.
+Szósta linia może być kodowana.
+Siódma linia również.
+Ósma linia tekstu.
+Dziewiąta linia dokumentu.
+Dziesiąta linia na koniec.
+Jedenasta linia dla pewności.
+Dwunasta linia tekstu.
+Trzynasta linia okładki.
+Czternasta linia dokumentu.
+Piętnasta linia treści.
+Szesnasta linia przykładu.
+Siedemnasta linia tekstu.
+Osiemnasta linia danych.
+Dziewiętnasta linia okładki.
+Dwudziesta i ostatnia linia.
+To jest przykładowy tekst okładkowy.
+Może zawierać polskie znaki: ąćęłńóśźż.
+Ta linia będzie służyć jako przykład.
+Kolejna linia tekstu normalnego.
+Piąta linia to drugi pivot.
+Szósta linia może być kodowana.
+Siódma linia również.
+Ósma linia tekstu.
+Dziewiąta linia dokumentu.
+Dziesiąta linia na koniec.
+Jedenasta linia dla pewności.
+Dwunasta linia tekstu.
+Trzynasta linia okładki.
+Czternasta linia dokumentu.
+Piętnasta linia treści.
+Szesnasta linia przykładu.
+Siedemnasta linia tekstu.
+Osiemnasta linia danych.
+Dziewiętnasta linia okładki.
+Dwudziesta i ostatnia linia.
+To jest przykładowy tekst okładkowy.
+Może zawierać polskie znaki: ąćęłńóśźż.
+Ta linia będzie służyć jako przykład.
+Kolejna linia tekstu normalnego.
+Piąta linia to drugi pivot.
+Szósta linia może być kodowana.
+Siódma linia również.
+Ósma linia tekstu.
+Dziewiąta linia dokumentu.
+Dziesiąta linia na koniec.
+Jedenasta linia dla pewności.
+Dwunasta linia tekstu.
+Trzynasta linia okładki.
+Czternasta linia dokumentu.
+Piętnasta linia treści.
+Szesnasta linia przykładu.
+Siedemnasta linia tekstu.
+Osiemnasta linia danych.
+Dziewiętnasta linia okładki.
+Dwudziesta i ostatnia linia.

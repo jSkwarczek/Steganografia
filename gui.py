@@ -1,10 +1,15 @@
+from pathlib import Path
 import sys
+import json
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QPushButton, QLabel, QTextEdit, QStackedWidget, QFileDialog,
     QMessageBox, QLineEdit
 )
-from PySide6.QtCore import Qt
+
+from PySide6.QtWebEngineWidgets import QWebEngineView
+
+from PySide6.QtCore import QUrl, Qt
 from PySide6.QtGui import QFont
 import tempfile
 from docx import Document
@@ -18,6 +23,8 @@ from us import embed_message_us, extract_message_us
 
 # Import ilsc
 from ilsc import embed_message_ilsc, extract_message_ilsc
+
+from emails import embed_message_emails, extract_message_emails
 
 class MethodSelectionWidget(QWidget):
     def __init__(self, parent=None):
@@ -724,6 +731,221 @@ class ExtractWidgetILSC(QWidget):
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Error occured while extracting secret message:\n{str(e)}")
 
+class EmbedWidgetEmails(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.init_ui()
+
+    def init_ui(self):
+        layout = QVBoxLayout()
+
+        title = QLabel("A high capacity text steganography scheme based on LZW compression and color coding\n[EMBED]")
+        title.setFont(QFont("Arial", 16, QFont.Bold))
+        title.setAlignment(Qt.AlignCenter)
+        layout.addWidget(title)
+
+        layout.addSpacing(20)
+
+        cover_label = QLabel("Cover Text:")
+        cover_label.setFont(QFont("Arial", 11, QFont.Bold))
+        layout.addWidget(cover_label)
+
+        self.cover_text = QTextEdit()
+        self.cover_text.setPlaceholderText("Provide cover text...")
+        self.cover_text.setMinimumHeight(150)
+        layout.addWidget(self.cover_text)
+
+        layout.addSpacing(15)
+
+        secret_label = QLabel("Secret Message:")
+        secret_label.setFont(QFont("Arial", 11, QFont.Bold))
+        layout.addWidget(secret_label)
+
+        self.secret_message = QTextEdit()
+        self.secret_message.setPlaceholderText("Provide secret message...")
+        self.secret_message.setMinimumHeight(40)
+        self.secret_message.setMaximumHeight(60)
+        layout.addWidget(self.secret_message)
+
+        layout.addSpacing(20)
+
+        buttons_layout = QHBoxLayout()
+
+        self.back_btn = QPushButton("Return to Methods")
+        self.back_btn.setMinimumSize(120, 40)
+        buttons_layout.addWidget(self.back_btn)
+
+        buttons_layout.addStretch()
+
+        self.embed_btn = QPushButton("Embed")
+        self.embed_btn.setMinimumSize(120, 40)
+        self.embed_btn.clicked.connect(self.perform_embed)
+        buttons_layout.addWidget(self.embed_btn)
+
+        self.extract_btn = QPushButton("Go to Extract")
+        self.extract_btn.setMinimumSize(120, 40)
+        buttons_layout.addWidget(self.extract_btn)
+
+        layout.addLayout(buttons_layout)
+        self.setLayout(layout)
+
+    def clear_fields(self):
+        self.cover_text.clear()
+        self.secret_message.clear()
+
+    def perform_embed(self):
+        cover = self.cover_text.toPlainText().strip()
+        secret = self.secret_message.toPlainText().strip()
+
+        if not cover:
+            QMessageBox.warning(self, "Warning", "Provide cover text!")
+            return
+
+        if not secret:
+            QMessageBox.warning(self, "Warning", "Provide secret message!")
+            return
+
+        try:
+            file_path, _ = QFileDialog.getSaveFileName(
+                self,
+                "Save stego file",
+                "",
+                "HTML (*.html)"
+            )
+
+            if file_path:
+
+                p = Path(file_path)
+
+                html_file_path = p.with_suffix(".html")
+                json_file_path = p.with_suffix(".json")
+
+                msg, email_addrs = embed_message_emails(secret_message=secret, cover_text=cover)
+
+                html_file_path.write_text(msg, encoding="utf-8")
+                json_file_path.write_text(json.dumps(email_addrs))
+
+                QMessageBox.information(
+                    self, "Success", f"File saved:\n{file_path}"
+                )
+
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Error occured while trying to embed:\n{str(e)}")
+
+
+class ExtractWidgetEmails(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.file_path = None
+        self.init_ui()
+
+    def init_ui(self):
+        layout = QVBoxLayout()
+
+        title = QLabel("A high capacity text steganography scheme based on LZW compression and color coding\n[EXTRACT]")
+        title.setFont(QFont("Arial", 16, QFont.Bold))
+        title.setAlignment(Qt.AlignCenter)
+        layout.addWidget(title)
+
+        layout.addSpacing(20)
+
+        stego_label = QLabel("Stego File:")
+        stego_label.setFont(QFont("Arial", 11, QFont.Bold))
+        layout.addWidget(stego_label)
+
+        stego_btn_layout = QHBoxLayout()
+        self.load_stego_btn = QPushButton("Load stego file")
+        self.load_stego_btn.clicked.connect(self.load_stego_file)
+        stego_btn_layout.addWidget(self.load_stego_btn)
+        stego_btn_layout.addStretch()
+        layout.addLayout(stego_btn_layout)
+
+        self.file_path_label = QLabel("")
+        stego_label.setFont(QFont("Arial", 11, QFont.Bold))
+        layout.addWidget(self.file_path_label)
+
+        layout.addSpacing(15)
+
+        extracted_label = QLabel("Extracted Secret Message:")
+        extracted_label.setFont(QFont("Arial", 11))
+        layout.addWidget(extracted_label)
+
+        self.extracted_message = QTextEdit()
+        self.extracted_message.setReadOnly(True)
+        self.extracted_message.setPlaceholderText("Secret Message...")
+        self.extracted_message.setMinimumHeight(40)
+        self.extracted_message.setMaximumHeight(60)
+        layout.addWidget(self.extracted_message)
+
+        email_addr_label = QLabel("Email addresses in CC:")
+        email_addr_label.setFont(QFont("Arial", 11))
+        layout.addWidget(email_addr_label)
+
+        self.emails_addr_text = QTextEdit()
+        self.emails_addr_text.setReadOnly(True)
+        self.emails_addr_text.setMinimumHeight(200)
+        layout.addWidget(self.emails_addr_text)
+
+        layout.addSpacing(1000)
+
+        buttons_layout = QHBoxLayout()
+
+        self.back_btn = QPushButton("Return to Methods")
+        self.back_btn.setMinimumSize(120, 40)
+        buttons_layout.addWidget(self.back_btn)
+
+        buttons_layout.addStretch()
+
+        self.extract_btn = QPushButton("Extract")
+        self.extract_btn.setMinimumSize(120, 40)
+        self.extract_btn.clicked.connect(self.perform_extract)
+        buttons_layout.addWidget(self.extract_btn)
+
+        self.embed_btn = QPushButton("Go to Embed")
+        self.embed_btn.setMinimumSize(120, 40)
+        buttons_layout.addWidget(self.embed_btn)
+
+        layout.addLayout(buttons_layout)
+        self.setLayout(layout)
+
+    def clear_fields(self):
+        self.file_path = None
+        self.file_path_label.clear()
+        self.extracted_message.clear()
+        self.emails_addr_text.clear()
+
+    def load_stego_file(self):
+        self.file_path, _ = QFileDialog.getOpenFileName(
+            self,
+            "Choose stego file",
+            "",
+            "HTML (*.html)",
+        )
+
+        if self.file_path:
+            self.file_path_label.setText(self.file_path)
+
+    def perform_extract(self):
+        if self.file_path is None:
+            QMessageBox.warning(self, "Warning", "Provide stego file!")
+            return
+
+        try:
+            p = Path(self.file_path)
+            colored_text = p.read_text()
+            email_addrs = json.loads(p.with_suffix(".json").read_text())
+            assert isinstance(email_addrs, list), f"expected a list of email addresses, got: {type(email_addrs)}"
+            secret_message = extract_message_emails(colored_text, email_addrs)
+
+            self.extracted_message.setPlainText(secret_message)
+            self.emails_addr_text.setPlainText("\n".join(email_addrs))
+
+            QMessageBox.information(self, "Success", "Secret message extracted!")
+
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Error occured while extracting secret message:\n{str(e)}")
+
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -743,6 +965,8 @@ class MainWindow(QMainWindow):
         self.extract_widget_us = ExtractWidgetUS()
         self.embed_widget_ilsc = EmbedWidgetILSC()
         self.extract_widget_ilsc = ExtractWidgetILSC()
+        self.embed_widget_emails = EmbedWidgetEmails()
+        self.extract_widget_emails = ExtractWidgetEmails()
 
         self.stack.addWidget(self.method_selection)
         self.stack.addWidget(self.embed_widget_epa)
@@ -751,12 +975,14 @@ class MainWindow(QMainWindow):
         self.stack.addWidget(self.extract_widget_us)
         self.stack.addWidget(self.embed_widget_ilsc)
         self.stack.addWidget(self.extract_widget_ilsc)
+        self.stack.addWidget(self.embed_widget_emails)
+        self.stack.addWidget(self.extract_widget_emails)
 
         self.method_selection.method1_btn.clicked.connect(self.show_embed_epa)
         self.method_selection.method2_btn.clicked.connect(self.show_embed_us)
         self.method_selection.method3_btn.clicked.connect(self.show_embed_ilsc)
+        self.method_selection.method4_btn.clicked.connect(self.show_embed_emails)
 
-        self.method_selection.method4_btn.clicked.connect(self.show_embed_epa)
         self.method_selection.method5_btn.clicked.connect(self.show_embed_epa)
         self.method_selection.method6_btn.clicked.connect(self.show_embed_epa)
 
@@ -775,6 +1001,11 @@ class MainWindow(QMainWindow):
         self.extract_widget_ilsc.back_btn.clicked.connect(self.show_method_selection)
         self.extract_widget_ilsc.embed_btn.clicked.connect(self.show_embed_ilsc)
 
+        self.embed_widget_emails.back_btn.clicked.connect(self.show_method_selection)
+        self.embed_widget_emails.extract_btn.clicked.connect(self.show_extract_emails)
+        self.extract_widget_emails.back_btn.clicked.connect(self.show_method_selection)
+        self.extract_widget_emails.embed_btn.clicked.connect(self.show_embed_emails)
+
         self.show_method_selection()
 
     def show_method_selection(self):
@@ -782,6 +1013,10 @@ class MainWindow(QMainWindow):
         self.extract_widget_epa.clear_fields()
         self.extract_widget_us.clear_fields()
         self.embed_widget_us.clear_fields()
+        self.extract_widget_ilsc.clear_fields()
+        self.embed_widget_ilsc.clear_fields()
+        self.extract_widget_emails.clear_fields()
+        self.embed_widget_emails.clear_fields()
         self.stack.setCurrentWidget(self.method_selection)
 
     def show_embed_epa(self):
@@ -801,6 +1036,12 @@ class MainWindow(QMainWindow):
 
     def show_extract_ilsc(self):
         self.stack.setCurrentWidget(self.extract_widget_ilsc)
+
+    def show_embed_emails(self):
+        self.stack.setCurrentWidget(self.embed_widget_emails)
+
+    def show_extract_emails(self):
+        self.stack.setCurrentWidget(self.extract_widget_emails)
 
 
 def main():

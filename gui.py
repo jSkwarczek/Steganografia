@@ -1069,11 +1069,16 @@ class EmbedWidgetAITS(QWidget):
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Error occured while trying to embed:\n{str(e)}")
 
-        with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt', encoding='utf-8') as stego_file:
-            stego_file.write(self.msg)
-            stego_file_path = stego_file.name
+        save_file_path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Save stego file",
+            "",
+            "txt (*.txt)"
+        )
 
-        QMessageBox.information(self, "Success", f"Message was saved to {stego_file_path}!")
+        Path(save_file_path).write_text(self.msg)
+
+        QMessageBox.information(self, "Success", f"Message was saved to {save_file_path}!")
 
 
 class ExtractWidgetAITS(QWidget):

@@ -1,0 +1,361 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                     GALILEO-CBOC VITERBI STEGANOGRAPHY                       ║
+║                        TECHNICZNY PRZEGLĄD SYSTEMU                           ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+SCHEMAT BLOKOWY ALGORYTMU
+═════════════════════════════════════════════════════════════════════════════════
+
+    Wiadomość               Tekst nośny
+    (48 bitów)              (120 słów)
+         │                       │
+         ▼                       │
+    ┌─────────────┐              │
+    │ Text→Bits   │              │
+    │   (8b/ch)   │              │
+    └─────────────┘              │
+         │                       │
+         ▼                       │
+    ┌──────────────────┐         │
+    │ Convolutional    │         │
+    │ Encoder (1/2)    │         │
+    │ K=7, G1, G2      │         │
+    └──────────────────┘         │
+         │                       │
+         ▼                       │
+    ┌────────────────────┐       │
+    │ CBOC Modulator     │       │
+    │ (homoglify + ZW)   │◄──────┘
+    │ 2 bity/słowo       │
+    └────────────────────┘
+         │
+         ▼
+    STEGO_TEXT (publicznie wysłany)
+
+─────────────────────────────────────────────────────────────────────────────────
+
+ODBIÓR:
+
+    STEGO_TEXT
+    (ze zmianami)
+         │
+         ▼
+    ┌────────────────────┐
+    │ CBOC Demodulator   │
+    │ (czyta homoglify)  │
+    │ (czyta ZW znaki)   │
+    └────────────────────┘
+         │
+         ▼
+    ┌──────────────────────────┐
+    │ Viterbi Decoder          │
+    │ - 64 stany (2^6)         │
+    │ - Metryka Hamminga       │
+    │ - Traceback + trim flush │
+    └──────────────────────────┘
+         │
+         ▼
+    ┌─────────────┐
+    │ Bits→Text   │
+    │  (8b/ch)    │
+    └─────────────┘
+         │
+         ▼
+    Wiadomość (48 bitów)
+
+
+PARAMETRY ENKODERA KONWOLUCYJNEGO
+═════════════════════════════════════════════════════════════════════════════════
+
+Standard:            Galileo I/NAV (GPS-like)
+Generator 1:         G1 = 0o171 = 001 111 001 (binarnie)
+Generator 2:         G2 = 0o133 = 001 011 011 (binarnie)
+Constraint Length:   K = 7 (rejestr 6-bitowy + 1 wejście)
+Kod Rate:            1/2 (1→2 bity)
+Liczba stanów:       2^(K-1) = 64
+
+Flush bits:          K-1 = 6 (dodawane na koniec)
+Zdolność korekty:    ~3-4 błędy bitów w oknie
+
+
+PARAMETRY MODULACJI CBOC
+═════════════════════════════════════════════════════════════════════════════════
+
+Bitów na słowo:      2 (bit1 + bit2)
+Metoda bit1:         Homoglify (cyrylica)
+Metoda bit2:         Zero-width markery
+
+Homoglify (łacina → cyrylica):
+  a→а, e→е, o→о, p→р, c→с, y→у, x→х, i→і, j→ј, s→ѕ
+  A→А, E→Е, O→О, P→Р, C→С, Y→У, X→Х, I→І, J→Ј, S→Ѕ
+
+Zero-width znaki:
+  bit=1: U+200B (Zero Width Space)
+  bit=0: U+200C (Zero Width Non-Joiner)
+
+
+WYMIARY DANYCH
+═════════════════════════════════════════════════════════════════════════════════
+
+Wiadomość:      N znaków
+
+Krok 1 - Text to Bits:
+  Bitów:        8N
+
+Krok 2 - Kodowanie konwolucyjne:
+  Bitów + flush: (8N + 6) = 8N + 6
+  Kodowanych:   (8N + 6) × 2 = 16N + 12
+
+Krok 3 - Modulacja CBOC:
+  Słów potrzeba: ⌈(16N + 12) / 2⌉ ≈ 8N + 6
+
+Wymóg: carrier_text musi mieć ≥ 8N + 6 słów
+
+Przykład:
+  N = 6 ("prezes"):
+    - Bitów oryginalnych:    48
+    - Bitów po kodowaniu:    108
+    - Słów potrzeba:         54
+    - Carrier minimum:       54 słowa
+
+
+ALGORYTM VITERBI — PSEUDO-KOD
+═════════════════════════════════════════════════════════════════════════════════
+
+# Inicjalizacja
+metrics[0..63] = [0, ∞, ∞, ..., ∞]        # Stan 0 ma metrykę 0
+paths[0..63]   = [[], [], ..., []]        # Puste ścieżki
+
+# Forward pass
+FOR t = 0 TO num_symbols-1 DO
+    received_symbol = (bit0, bit1)
+    
+    FOR from_state = 0 TO 63 DO
+        IF metrics[from_state] = ∞ THEN CONTINUE
+        
+        FOR input_bit IN {0, 1} DO
+            next_state = transition_function(from_state, input_bit)
+            expected = encoder_output(from_state, input_bit)
+            
+            distance = hamming(received_symbol, expected)
+            new_metric = metrics[from_state] + distance
+            
+            IF new_metric < metrics[next_state] THEN
+                metrics[next_state] = new_metric
+                paths[next_state] = paths[from_state] + [input_bit]
+            END IF
+        END FOR
+    END FOR
+END FOR
+
+# Traceback
+best_state = argmin(metrics)
+best_path = paths[best_state]
+best_path = best_path[:-K+1]  # Usuń flush bits
+
+RETURN best_path
+
+
+ZŁOŻONOŚĆ
+═════════════════════════════════════════════════════════════════════════════════
+
+Enkoder Konwolucyjny:
+  Czas:     O(N) dla N bitów
+  Pamięć:   O(1) (tylko stan)
+
+Modulator CBOC:
+  Czas:     O(M) dla M słów
+  Pamięć:   O(M)
+
+Dekoder Viterbi:
+  Czas:     O(T × S × 2) gdzie T=liczba symboli, S=64 stanów
+            ≈ O(T × 128)
+  Pamięć:   O(T × S × L) gdzie L=średnia długość ścieżki
+            ≈ O(T × 64 × T) = O(T²) [nieoptymalne!]
+
+  Dla T=54 symboli:
+    - Czas: ~54 × 128 = 6912 operacji (błyskawiczny)
+    - Pamięć: ~54 × 64 × 54 = 186K liczb (20 MB dla float64)
+
+
+POTENCJALNE BŁĘDY TRANSMISJI
+═════════════════════════════════════════════════════════════════════════════════
+
+1. ZERO-WIDTH ZNAKI USUNIĘTE
+   Problem: Edytor / kanał sieciowy usuwa U+200B/U+200C
+   Skutek:  bit2 zawsze = 0 (brak markera)
+   Rozwiązanie: Viterbi korekcja błędów
+
+2. HOMOGLIFY ZIGNOROWANE
+   Problem: Odbiornik widzi tekst i zmienia cyrylicę na łacinkę
+   Skutek:  bit1 zawsze = 0
+   Rozwiązanie: Duplikowanie bitów lub interleaving
+
+3. SŁOWA BEZ HOMOGLIFÓW
+   Problem: Słowo "why" nie zawiera żadnej litery do zamiany
+   Skutek:  bit1=1 nie może być ustawiony
+   Realizacja: Kod milczący ignoruje (BUG!)
+
+4. ZMIANA CARRIER_TEXT
+   Problem: Tekst nośny jest edytowany/skracany
+   Skutek:  Niektóre słowa znikają z danymi bitów
+   Rozwiązanie: Błędna wiadomość lub wyjątek
+
+
+PRZYCHODNI — POPRAW JAKIE BITY
+═════════════════════════════════════════════════════════════════════════════════
+
+Metryka Hamminga dla symbolu (2 bity):
+  received = (r0, r1)
+  expected = (e0, e1)
+  distance = (r0 ⊕ e0) + (r1 ⊕ e1)
+  
+  Możliwe wartości: 0, 1, 2
+  - 0: perfect match
+  - 1: 1 bit error (Viterbi potrafi naprawić)
+  - 2: both bits wrong (Viterbi próbuje minimalnej sumy)
+
+Zdolność Viterbi: ~3-4 błędy w ciągu 54 symboli (108 bitów)
+
+
+LISTA KONTROLNA IMPLEMENTACJI
+═════════════════════════════════════════════════════════════════════════════════
+
+✓ ConvolutionalEncoder
+  - [x] Rejestr przesuwający (K=7)
+  - [x] Wielomiany G1, G2
+  - [x] Flush bits (K-1 zer)
+  - [ ] Validacja wejścia (czy tylko 0/1?)
+
+✓ ViterbiDecoder
+  - [x] Forward pass (64 stany)
+  - [x] Traceback
+  - [x] Usuwanie flush bitów
+  - [ ] Optymalizacja pamięci (backpointers)
+  - [ ] Timeout dla bardzo długich sekwencji
+
+✓ CBOCModulator
+  - [x] Mapowanie homoglifów
+  - [x] Zero-width markery
+  - [ ] Validacja: bit1=1 ale brak pasujących liter
+  - [ ] Informacja o stracie bitów
+
+✓ GalileoSteganography
+  - [x] Text ↔ Bits konwersja
+  - [x] hide_message() workflow
+  - [x] extract_message() workflow
+  - [ ] UTF-8 support
+  - [ ] Compression
+
+
+WYMAGANIA ZALEŻNOŚCI
+═════════════════════════════════════════════════════════════════════════════════
+
+import numpy as np          # (import, ale nie używany!)
+from typing import List, Tuple, Dict
+
+Uwaga: numpy.py nie jest faktycznie używany w kodzie — można usunąć.
+
+
+TESTY REGRESJI (do przyszłych wydań)
+═════════════════════════════════════════════════════════════════════════════════
+
+Test 1: Krótka wiadomość bez błędów
+  Input:  message="A", carrier="word1 word2 ... word20"
+  Oczekiwane: recovered="A"
+
+Test 2: Szum w transmisji
+  Input:  message="test", receiver dodaje losowe błędy bitów
+  Oczekiwane: recovered≈"test" (może być z błędami jeśli >4)
+
+Test 3: Carrier za krótki
+  Input:  message=długa, carrier=krótki
+  Oczekiwane: ValueError
+
+Test 4: Brak pasujących homoglifów
+  Input:  message="123", carrier="111 222 333"
+  Oczekiwane: bit1 zawsze=0, ale bez ostrzeżenia (BUG!)
+
+Test 5: Zero-width znaki usunięte
+  Input:  stego_text z markerami usuniętymi
+  Oczekiwane: recovered≠original (Viterbi próbuje poprawić)
+
+
+PŘÍKLADY HOMOGLIFÓW (wizualne porównanie)
+═════════════════════════════════════════════════════════════════════════════════
+
+Łacinka  Cyrylica  Bardzo podobne?
+─────────────────────────────────
+a        а         TAK (bardzo)
+e        е         TAK
+o        о         TAK
+p        р         TAK
+c        с         TAK
+y        у         TAK
+x        х         TAK
+i        і         TAK (zależy od fontu)
+j        ј         TAK
+s        ѕ         NIE (dość różne)
+A        А         TAK
+E        Е         TAK
+O        О         TAK
+P        Р         TAK
+C        С         TAK
+Y        У         TAK
+X        Х         TAK
+I        І         TAK
+J        Ј         NIE
+S        Ѕ         NIE
+
+⚠️  UWAGA: Niektóre homoglify mogą być rozpoznane przy wizualnej inspekcji!
+    Zwłaszcza ѕ i Ѕ są dość różne od s/S.
+
+
+STANDARDY I REFERENCJE
+═════════════════════════════════════════════════════════════════════════════════
+
+Kody konwolucyjne:
+  - Viterbi, A. J. "Error bounds for convolutional codes..." (1967)
+  - Berlekamp, E. "Algebraic Coding Theory" (1968)
+
+Kodowanie Galileo:
+  - Galileo Open Service Interface Control Document (ICD)
+  - CBOC (Composite Binary Offset Carrier) modulation
+  - Generator polynomials (171, 133) = (0o171, 0o133) w oktalnym
+
+Steganografia:
+  - Invisible ink vs. visual steganography
+  - Unicode homoglyphs
+  - Zero-width characters (Unicode 200B, 200C)
+
+
+PRZYSZŁE OPTYMALIZACJE (Priority Order)
+═════════════════════════════════════════════════════════════════════════════════
+
+P0 (CRITICAL)
+  1. Validacja: zgłosić błąd gdy bit1=1 ale brak pasujących liter
+  2. Obsługa UTF-8 dla Unicode
+
+P1 (HIGH)
+  3. Backpointer optimization dla Viterbi (zmniejsz pamięć)
+  4. Compression (np. zlib) przed enkodowaniem
+  5. CRC/checksum na końcu wiadomości
+
+P2 (MEDIUM)
+  6. Interleaving bitów (rozprzestrzeń błędy)
+  7. Turbo codes zamiast convolutional
+  8. AES encryption opcjonalne
+
+P3 (LOW)
+  9. GUI dla hide/extract
+  10. Multi-language support
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                              KONIEC PRZEGLĄDU                               ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+Data:     Listopad 2025
+Wersja:   1.0
+Autor:    Zespół Deweloperski
+Status:   DRAFT → review

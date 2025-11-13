@@ -28,6 +28,13 @@ from emails import embed_message_emails, extract_message_emails
 
 from aits import embed_message_aits, extract_message_aits
 
+from og import OG
+
+_OG = OG()
+
+embed_message_og = _OG.hide_message
+extract_message_og = _OG.extract_message
+
 class MethodSelectionWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -1294,8 +1301,7 @@ class EmbedWidgetOG(QWidget):
             return
 
         try:
-            # TODO: SWAP
-            self.msg = embed_message_og(cover, secret)
+            self.msg = embed_message_og(secret, cover)
 
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Error occured while trying to embed:\n{str(e)}")
@@ -1320,7 +1326,7 @@ class ExtractWidgetOG(QWidget):
     def init_ui(self):
         layout = QVBoxLayout()
 
-        title = QLabel("AITSteg: An Innovative Text Steganography Technique for Hidden Transmission of Text Message via Social Media\n[EXTRACT]")
+        title = QLabel("Internal method\n[EXTRACT]")
         title.setFont(QFont("Arial", 16, QFont.Bold))
         title.setAlignment(Qt.AlignCenter)
         layout.addWidget(title)
@@ -1401,9 +1407,7 @@ class ExtractWidgetOG(QWidget):
             return
 
         try:
-            # TODO: swaw
             secret_message = extract_message_og(stego)
-            print(secret_message)
 
             self.extracted_message.setPlainText(secret_message)
             QMessageBox.information(self, "Success", "Secret message extracted!")

@@ -1198,6 +1198,220 @@ class ExtractWidgetAITS(QWidget):
             QMessageBox.critical(self, "Error", f"Error occured while extracting secret message:\n{str(e)}")
 
 
+class EmbedWidgetOG(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.init_ui()
+
+    def init_ui(self):
+        layout = QVBoxLayout()
+
+        title = QLabel("Internal method\n[EMBED]")
+        title.setFont(QFont("Arial", 16, QFont.Bold))
+        title.setAlignment(Qt.AlignCenter)
+        layout.addWidget(title)
+
+        layout.addSpacing(20)
+
+        cover_label = QLabel("Cover Text:")
+        cover_label.setFont(QFont("Arial", 11, QFont.Bold))
+        layout.addWidget(cover_label)
+
+        cover_btn_layout = QHBoxLayout()
+        self.load_cover_btn = QPushButton("Select file")
+        self.load_cover_btn.clicked.connect(self.load_cover_text)
+        cover_btn_layout.addWidget(self.load_cover_btn)
+        cover_btn_layout.addStretch()
+        layout.addLayout(cover_btn_layout)
+
+        self.cover_text = QTextEdit()
+        self.cover_text.setPlaceholderText("Provide or load cover text...")
+        self.cover_text.setMinimumHeight(150)
+        layout.addWidget(self.cover_text)
+
+        layout.addSpacing(15)
+
+        secret_label = QLabel("Secret Message:")
+        secret_label.setFont(QFont("Arial", 11, QFont.Bold))
+        layout.addWidget(secret_label)
+
+        self.secret_message = QTextEdit()
+        self.secret_message.setPlaceholderText("Provide secret message...")
+        self.secret_message.setMinimumHeight(40)
+        self.secret_message.setMaximumHeight(60)
+        layout.addWidget(self.secret_message)
+
+        layout.addSpacing(15)
+
+        buttons_layout = QHBoxLayout()
+
+        self.back_btn = QPushButton("Return to Methods")
+        self.back_btn.setMinimumSize(120, 40)
+        buttons_layout.addWidget(self.back_btn)
+
+        buttons_layout.addStretch()
+
+        self.embed_btn = QPushButton("Embed")
+        self.embed_btn.setMinimumSize(120, 40)
+        self.embed_btn.clicked.connect(self.perform_embed)
+        buttons_layout.addWidget(self.embed_btn)
+
+        self.extract_btn = QPushButton("Go to Extract")
+        self.extract_btn.setMinimumSize(120, 40)
+        buttons_layout.addWidget(self.extract_btn)
+
+        layout.addLayout(buttons_layout)
+        self.setLayout(layout)
+
+        self.stego_content = None
+
+    def clear_fields(self):
+        self.cover_text.clear()
+        self.secret_message.clear()
+        self.stego_content = None
+
+    def load_cover_text(self):
+        file_path, _ = QFileDialog.getOpenFileName(
+            self, "Select cover file", "", "Text Files (*.txt);;All Files (*)"
+        )
+        if file_path:
+            try:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    self.cover_text.setPlainText(f.read())
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"Cannot load file:\n{str(e)}")
+
+    def perform_embed(self):
+        cover = self.cover_text.toPlainText().strip()
+        secret = self.secret_message.toPlainText().strip()
+
+        if not cover:
+            QMessageBox.warning(self, "Warning", "Provide cover text!")
+            return
+
+        if not secret:
+            QMessageBox.warning(self, "Warning", "Provide secret message!")
+            return
+
+        try:
+            # TODO: SWAP
+            self.msg = embed_message_og(cover, secret)
+
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Error occured while trying to embed:\n{str(e)}")
+
+        save_file_path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Save stego file",
+            "",
+            "txt (*.txt)"
+        )
+
+        Path(save_file_path).write_text(self.msg)
+
+        QMessageBox.information(self, "Success", f"Message was saved to {save_file_path}!")
+
+
+class ExtractWidgetOG(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.init_ui()
+
+    def init_ui(self):
+        layout = QVBoxLayout()
+
+        title = QLabel("AITSteg: An Innovative Text Steganography Technique for Hidden Transmission of Text Message via Social Media\n[EXTRACT]")
+        title.setFont(QFont("Arial", 16, QFont.Bold))
+        title.setAlignment(Qt.AlignCenter)
+        layout.addWidget(title)
+
+        layout.addSpacing(20)
+
+        stego_label = QLabel("Stego File:")
+        stego_label.setFont(QFont("Arial", 11, QFont.Bold))
+        layout.addWidget(stego_label)
+
+        stego_btn_layout = QHBoxLayout()
+        self.load_stego_btn = QPushButton("Load stego file")
+        self.load_stego_btn.clicked.connect(self.load_stego_file)
+        stego_btn_layout.addWidget(self.load_stego_btn)
+        stego_btn_layout.addStretch()
+        layout.addLayout(stego_btn_layout)
+
+        self.stego_text = QTextEdit()
+        self.stego_text.setPlaceholderText("Provide or load stego file...")
+        self.stego_text.setMinimumHeight(150)
+        layout.addWidget(self.stego_text)
+
+        layout.addSpacing(15)
+
+        extracted_label = QLabel("Extracted Secret Message:")
+        extracted_label.setFont(QFont("Arial", 11, QFont.Bold))
+        layout.addWidget(extracted_label)
+
+        self.extracted_message = QTextEdit()
+        self.extracted_message.setReadOnly(True)
+        self.extracted_message.setPlaceholderText("Secret Message...")
+        self.extracted_message.setMinimumHeight(40)
+        self.extracted_message.setMaximumHeight(60)
+        layout.addWidget(self.extracted_message)
+
+        layout.addSpacing(20)
+
+        buttons_layout = QHBoxLayout()
+
+        self.back_btn = QPushButton("Return to Methods")
+        self.back_btn.setMinimumSize(120, 40)
+        buttons_layout.addWidget(self.back_btn)
+
+        buttons_layout.addStretch()
+
+        self.extract_btn = QPushButton("Extract")
+        self.extract_btn.setMinimumSize(120, 40)
+        self.extract_btn.clicked.connect(self.perform_extract)
+        buttons_layout.addWidget(self.extract_btn)
+
+        self.embed_btn = QPushButton("Go to Embed")
+        self.embed_btn.setMinimumSize(120, 40)
+        buttons_layout.addWidget(self.embed_btn)
+
+        layout.addLayout(buttons_layout)
+        self.setLayout(layout)
+
+    def clear_fields(self):
+        self.stego_text.clear()
+        self.extracted_message.clear()
+
+    def load_stego_file(self):
+        file_path, _ = QFileDialog.getOpenFileName(
+            self, "Choose stego file", "", "Text Files (*.txt);;All Files (*)"
+        )
+        if file_path:
+            try:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    self.stego_text.setPlainText(f.read())
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"Cannot load stego file:\n{str(e)}")
+
+    def perform_extract(self):
+        stego = self.stego_text.toPlainText().strip()
+
+        if not stego:
+            QMessageBox.warning(self, "Warning", "Provide stego text!")
+            return
+
+        try:
+            # TODO: swaw
+            secret_message = extract_message_og(stego)
+            print(secret_message)
+
+            self.extracted_message.setPlainText(secret_message)
+            QMessageBox.information(self, "Success", "Secret message extracted!")
+
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Error occured while extracting secret message:\n{str(e)}")
+
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -1221,6 +1435,8 @@ class MainWindow(QMainWindow):
         self.extract_widget_emails = ExtractWidgetEmails()
         self.embed_widget_aits = EmbedWidgetAITS()
         self.extract_widget_aits = ExtractWidgetAITS()
+        self.embed_widget_og = EmbedWidgetOG()
+        self.extract_widget_og = ExtractWidgetOG()
 
         self.stack.addWidget(self.method_selection)
         self.stack.addWidget(self.embed_widget_epa)
@@ -1233,14 +1449,15 @@ class MainWindow(QMainWindow):
         self.stack.addWidget(self.extract_widget_emails)
         self.stack.addWidget(self.embed_widget_aits)
         self.stack.addWidget(self.extract_widget_aits)
+        self.stack.addWidget(self.embed_widget_og)
+        self.stack.addWidget(self.extract_widget_og)
 
         self.method_selection.method1_btn.clicked.connect(self.show_embed_epa)
         self.method_selection.method2_btn.clicked.connect(self.show_embed_us)
         self.method_selection.method3_btn.clicked.connect(self.show_embed_ilsc)
         self.method_selection.method4_btn.clicked.connect(self.show_embed_emails)
         self.method_selection.method5_btn.clicked.connect(self.show_embed_aits)
-
-        self.method_selection.method6_btn.clicked.connect(self.show_embed_epa)
+        self.method_selection.method6_btn.clicked.connect(self.show_embed_og)
 
         self.embed_widget_epa.back_btn.clicked.connect(self.show_method_selection)
         self.embed_widget_epa.extract_btn.clicked.connect(self.show_extract_epa)
@@ -1267,6 +1484,11 @@ class MainWindow(QMainWindow):
         self.extract_widget_aits.back_btn.clicked.connect(self.show_method_selection)
         self.extract_widget_aits.embed_btn.clicked.connect(self.show_embed_aits)
 
+        self.embed_widget_og.back_btn.clicked.connect(self.show_method_selection)
+        self.embed_widget_og.extract_btn.clicked.connect(self.show_extract_og)
+        self.extract_widget_og.back_btn.clicked.connect(self.show_method_selection)
+        self.extract_widget_og.embed_btn.clicked.connect(self.show_embed_og)
+
         self.show_method_selection()
 
     def show_method_selection(self):
@@ -1278,6 +1500,8 @@ class MainWindow(QMainWindow):
         self.embed_widget_ilsc.clear_fields()
         self.extract_widget_emails.clear_fields()
         self.embed_widget_emails.clear_fields()
+        self.embed_widget_og.clear_fields()
+        self.extract_widget_og.clear_fields()
         self.stack.setCurrentWidget(self.method_selection)
 
     def show_embed_epa(self):
@@ -1309,6 +1533,12 @@ class MainWindow(QMainWindow):
 
     def show_extract_aits(self):
         self.stack.setCurrentWidget(self.extract_widget_aits)
+
+    def show_embed_og(self):
+        self.stack.setCurrentWidget(self.embed_widget_og)
+
+    def show_extract_og(self):
+        self.stack.setCurrentWidget(self.extract_widget_og)
 
 
 def main():

@@ -1,32 +1,38 @@
 # Omówienie zastosowanych algorytmów steganograficznych
 
-## Text Steganography on Sundanese Script using Improved Line Shift Coding
+## Character Pair Text Steganography based on the Enhanced Paragraph Approach
 
 ### Design
 
-### Implementation
+### Help
 
 ## Unicode For Hiding Information in a Text Document
 
 ### Design
 
-### Implementation
+### Help
 
-## Character Pair Text Steganography based on the Enhanced Paragraph Approach
-
-### Design
-
-### Implementation
-
-## An Innovative Text Steganography Technique for Hidden Transmission of Text Message via Social Media
+## Text Steganography on Sundanese Script using Improved Line Shift Coding
 
 ### Design
 
-### Implementation
+### Help
 
 ## A high capacity text steganography scheme based on LZW compression and color coding
 
 ### Design
 [Source](https://www.sciencedirect.com/science/article/pii/S2215098616301331)
 
-### Implementation
+### Help
+
+## An Innovative Text Steganography Technique for Hidden Transmission of Text Message via Social Media
+
+### Design
+
+### Help
+
+## Custom algorithm
+
+### Design
+
+### Help

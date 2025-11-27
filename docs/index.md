@@ -4,17 +4,193 @@
 
 ### Design
 
+#### Embed
+
+```mermaid
+flowchart TD
+
+A0([Start]) --> A1[Wczytaj ukrytą wiadomość SM i tekst nośny CT]
+A1 --> A2[Konwertuj SM na ciąg bitów]
+A2 --> A3[Pobierz kolejne słowo z CT i zapisz je do stego-tekstu]
+A3 --> A4[Ustaw L = 1<br/>s = pierwszy znak<br/>e = ostatni znak]
+A4 --> A5{s == e?}
+
+A5 -- Tak --> A6[Zwiększ L o 1]
+A6 --> A7{Czy są kolejne znaki<br/>dla poziomu L?}
+A7 -- Tak --> A8[Ustal s = następny znak od przodu<br/>e = następny znak od tyłu]
+A8 --> A5
+
+A7 -- Nie --> A3
+
+A5 -- Nie --> A9[Pobierz kolejny bit x]
+A9 --> A10{Bit x == 1?}
+A10 -- Tak --> A11[Zapisz e do Stego-Key SK]
+A10 -- Nie --> A12[Zapisz s do Stego-Key SK]
+
+A11 --> A13[Zwiększ L o 1]
+A12 --> A13
+
+A13 --> A14{Czy są kolejne znaki<br/>dla poziomu L?}
+A14 -- Tak --> A15[Ustal s = następny znak od przodu<br/>e = następny znak od tyłu]
+A15 --> A5
+
+A14 -- Nie --> A16{Czy są kolejne słowa CT?}
+A16 -- Tak --> A3
+A16 -- Nie --> A17([Koniec])
+```
+
+#### Extract
+
+```mermaid
+flowchart TD
+
+B0([Start]) --> B1[Wczytaj Stego-Key SK i Stego-Tekst ST]
+B1 --> B2[Pobierz kolejne słowo z ST]
+B2 --> B3[Ustaw L = 1<br/>s = pierwszy znak<br/>e = ostatni znak]
+B3 --> B4{s == e?}
+
+B4 -- Tak --> B5[Zwiększ L o 1]
+B5 --> B6{Czy są kolejne znaki<br/>dla poziomu L?}
+B6 -- Tak --> B7[Ustal s = następny znak od przodu<br/>e = następny znak od tyłu]
+B7 --> B4
+
+B6 -- Nie --> B16
+
+B4 -- Nie --> B8[Pobierz kolejny znak c z SK]
+B8 --> B9{c == s?}
+
+B9 -- Tak --> B10[Zapisz bit 0 do pliku binarnego]
+B9 -- Nie --> B11{c == e?}
+B11 -- Tak --> B12[Zapisz bit 1 do pliku binarnego]
+B11 -- Nie --> B12b[Znak spoza pary — błąd lub pomiń]
+
+B10 --> B13[Zwiększ L o 1]
+B12 --> B13
+B12b --> B13
+
+B13 --> B14{Czy są kolejne znaki<br/>dla poziomu L?}
+B14 -- Tak --> B15[Ustal s = następny znak od przodu<br/>e = następny znak od tyłu]
+B15 --> B4
+
+B14 -- Nie --> B16{Czy w SK są jeszcze znaki?}
+B16 -- Tak --> B2
+B16 -- Nie --> B17[Konwertuj binarny strumień<br/>na tekst jawny]
+B17 --> B18([Koniec])
+```
+
 ### Help
 
 ## Unicode For Hiding Information in a Text Document
 
 ### Design
 
+#### Embed
+
+```mermaid
+flowchart TD
+
+A[Start] --> B[Wczytaj pusty dokument .docx]
+B --> C[Pobierz tekst tajny A–Z]
+C --> D[Wstaw znacznik początku: kombinacja ZW-ZW-ZW kod 26]
+D --> E[Sprawdź pojemność kontenera: liczba spacji >= 3 * długość wiadomości]
+E -->|OK| F[Iteruj po literach tajnego tekstu]
+E -->|Brak pojemności| Z[Zakończ z błędem]
+
+F --> G[Odczytaj literę]
+G --> H[Znajdź jej kod trójkowy THIN=0, HAIR=1, ZW=2 wg tabeli]
+H --> I[Zamień 3 kolejne spacje na odpowiednie spacje Unicode]
+I --> J[Czy to ostatnia litera?]
+J -->|Nie| F
+J -->|Tak| K[Wstaw znacznik końca: ZW-ZW-ZW]
+K --> L[Zapisz dokument]
+L --> M[Koniec]
+```
+
+#### Extract
+
+```mermaid
+flowchart TD
+
+A[Start] --> B[Wczytaj dokument .docx]
+B --> C[Przeszukaj spacje między słowami]
+C --> D[Czy znaleziono znacznik start: ZW-ZW-ZW]
+D -->|Nie| C
+D -->|Tak| E[Przechodź po kolejnych trójkach spacji]
+
+E --> F[Odczytaj 3 spacje]
+F --> G[Konwersja do wartości 0/1/2]
+G --> H[Sprawdź czy to kod '26']
+H -->|Tak| K[Koniec: zwróć odczytany tekst]
+H -->|Nie| I[Zamień kod trójkowy na literę A–Z]
+I --> J[Dodaj literę do wyniku]
+J --> E
+```
+
 ### Help
 
 ## Text Steganography on Sundanese Script using Improved Line Shift Coding
 
 ### Design
+
+#### Embed
+
+```mermaid
+flowchart TD
+
+A[Start] --> B[Wczytaj cover text]
+B --> D[Pobierz tajny tekst]
+D --> E[Konwersja ASCII na bity]
+
+E --> F[Policz możliwe linie do przesunięcia]
+F --> G[Czy liczba linii < liczba bitów?]
+G -->|Nie| Z[Odrzuć: brak pojemności]
+G -->|Tak| H[Liczba bitów == liczba linii?]
+
+H --> |Nie| I[Dodaj losowe bity]
+H --> |Tak| V
+
+I --> V[Iteruj po liniach]
+
+V --> VV[Linia to Pivot]
+
+VV --> |Tak| V
+VV --> |Nie| J[Iteruj po bitach]
+
+J --> K[Odczytaj bit]
+K --> L[Bit == 1]
+K --> M[Bit == 0]
+L --> N[Przesuń linię w górę]
+M --> O[Przesuń linię w dół]
+N --> R[Czy ostatni bit?]
+O --> R[Czy ostatni bit?]
+R -->|Nie| V
+R -->|Tak| S[Normalizacja]
+S --> T[Zapisz jako PDF]
+T --> U[Koniec]
+```
+
+#### Extract
+
+```mermaid
+flowchart TD
+
+A[Start] --> C[Wczytaj plik PDF]
+C --> B[Iteruj po liniach]
+B --> D[Linia to Pivot?]
+D --> |Tak| B
+D --> |Nie| F[Porównaj linię z Pivot'em]
+F --> G[Linia jest wyżej niż powinna]
+F --> V[Linia jest niżej niż powinna]
+G --> VV[Bit = 1]
+V --> VVV[Bit = 0]
+VV --> H[Dodaj bit do bufferu]
+VVV --> H[Dodaj bit do bufferu]
+H --> I[Czy zebrano wymaganą liczbę bitów?]
+I -->|Nie| B
+I -->|Tak| J[Konwersja bitów na ASCII]
+J --> K[Odtworzenie tajnej wiadomości]
+K --> L[Koniec]
+```
 
 ### Help
 

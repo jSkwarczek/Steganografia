@@ -30,7 +30,7 @@ def embed_message_ilsc(cover_text, secret_message, output_pdf_path):
     if len(secret_bits) > total_capacity:
         raise Exception(f"Secret message too long: {len(secret_bits)}>{total_capacity}")
     
-    pdfmetrics.registerFont(TTFont('DejaVuSans', './DejaVuSans.ttf'))
+    pdfmetrics.registerFont(TTFont('DejaVuSans', './external/DejaVuSans.ttf'))
     c = canvas.Canvas(output_pdf_path, pagesize=letter)
     c.setFont('DejaVuSans', 12)
     width, height = letter

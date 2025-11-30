@@ -1086,6 +1086,9 @@ class EmbedWidgetAITS(QWidget):
             "txt (*.txt)"
         )
 
+        if not save_file_path.endswith(".txt"):
+            save_file_path = save_file_path + ".txt"
+
         Path(save_file_path).write_text(self.msg)
 
         QMessageBox.information(self, "Success", f"Message was saved to {save_file_path}!")
@@ -1315,6 +1318,9 @@ class EmbedWidgetOG(QWidget):
             "",
             "txt (*.txt)"
         )
+
+        if not save_file_path.endswith(".txt"):
+            save_file_path = save_file_path + ".txt"
 
         Path(save_file_path).write_text(self.msg)
 

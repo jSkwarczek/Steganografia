@@ -14,6 +14,7 @@ from PySide6.QtGui import QFont
 import tempfile
 from docx import Document
 import os
+import webbrowser
 
 # Import epa
 from epa import embed_message_epa, extract_message_epa
@@ -24,16 +25,31 @@ from us import embed_message_us, extract_message_us
 # Import ilsc
 from ilsc import embed_message_ilsc, extract_message_ilsc
 
+# Import emails
 from emails import embed_message_emails, extract_message_emails
 
+# Import aits
 from aits import embed_message_aits, extract_message_aits
 
+# Import og
 from og import OG
 
 _OG = OG()
 
 embed_message_og = _OG.hide_message
 extract_message_og = _OG.extract_message
+
+
+def _get_help_url(num: int) -> str:
+    assert num >= 0
+
+    base_url = f"file://{Path(__file__).absolute().parent}/site/index.html#help"
+
+    if num == 0:
+        return base_url
+
+    return base_url + f"_{num}"
+
 
 class MethodSelectionWidget(QWidget):
     def __init__(self, parent=None):
@@ -82,8 +98,9 @@ class MethodSelectionWidget(QWidget):
 
 
 class EmbedWidgetEPA(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, help_url:str, parent=None):
         super().__init__(parent)
+        self.help_url = help_url
         self.init_ui()
 
     def init_ui(self):
@@ -147,6 +164,11 @@ class EmbedWidgetEPA(QWidget):
 
         buttons_layout.addStretch()
 
+        self.help_btn = QPushButton("Help")
+        self.help_btn.setMinimumSize(120, 40)
+        self.help_btn.clicked.connect(self.open_help_in_browser)
+        buttons_layout.addWidget(self.help_btn)
+
         self.embed_btn = QPushButton("Embed")
         self.embed_btn.setMinimumSize(120, 40)
         self.embed_btn.clicked.connect(self.perform_embed)
@@ -208,9 +230,13 @@ class EmbedWidgetEPA(QWidget):
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Error occured while trying to embed:\n{str(e)}")
 
+    def open_help_in_browser(self):
+        webbrowser.open(self.help_url)
+
 class ExtractWidgetEPA(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, help_url: str, parent=None):
         super().__init__(parent)
+        self.help_url = help_url
         self.init_ui()
 
     def init_ui(self):
@@ -274,6 +300,11 @@ class ExtractWidgetEPA(QWidget):
 
         buttons_layout.addStretch()
 
+        self.help_btn = QPushButton("Help")
+        self.help_btn.setMinimumSize(120, 40)
+        self.help_btn.clicked.connect(self.open_help_in_browser)
+        buttons_layout.addWidget(self.help_btn)
+
         self.extract_btn = QPushButton("Extract")
         self.extract_btn.setMinimumSize(120, 40)
         self.extract_btn.clicked.connect(self.perform_extract)
@@ -330,11 +361,15 @@ class ExtractWidgetEPA(QWidget):
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Error occured while extracting secret message:\n{str(e)}")
 
+    def open_help_in_browser(self):
+        webbrowser.open(self.help_url)
+
 class EmbedWidgetUS(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, help_url: str, parent=None):
         super().__init__(parent)
         # self.input_path = None
         # self.stego_output_doc = None
+        self.help_url = help_url
         self.init_ui()
 
     def init_ui(self):
@@ -384,6 +419,11 @@ class EmbedWidgetUS(QWidget):
         buttons_layout.addWidget(self.back_btn)
 
         buttons_layout.addStretch()
+
+        self.help_btn = QPushButton("Help")
+        self.help_btn.setMinimumSize(120, 40)
+        self.help_btn.clicked.connect(self.open_help_in_browser)
+        buttons_layout.addWidget(self.help_btn)
 
         self.embed_btn = QPushButton("Embed")
         self.embed_btn.setMinimumSize(120, 40)
@@ -439,10 +479,14 @@ class EmbedWidgetUS(QWidget):
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Error occured while trying to embed:\n{str(e)}")
 
+    def open_help_in_browser(self):
+        webbrowser.open(self.help_url)
+
 class ExtractWidgetUS(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, help_url: str, parent=None):
         super().__init__(parent)
         self.input_text = None
+        self.help_url = help_url
         self.init_ui()
 
     def init_ui(self):
@@ -493,6 +537,11 @@ class ExtractWidgetUS(QWidget):
 
         buttons_layout.addStretch()
 
+        self.help_btn = QPushButton("Help")
+        self.help_btn.setMinimumSize(120, 40)
+        self.help_btn.clicked.connect(self.open_help_in_browser)
+        buttons_layout.addWidget(self.help_btn)
+
         self.extract_btn = QPushButton("Extract")
         self.extract_btn.setMinimumSize(120, 40)
         self.extract_btn.clicked.connect(self.perform_extract)
@@ -541,13 +590,17 @@ class ExtractWidgetUS(QWidget):
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Error occured while extracting secret message:\n{str(e)}")
 
+    def open_help_in_browser(self):
+        webbrowser.open(self.help_url)
+
 
 class EmbedWidgetILSC(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, help_url: str, parent=None):
         super().__init__(parent)
         # self.input_path = None
         # self.stego_output_doc = None
         self.init_ui()
+        self.help_url = help_url
 
     def init_ui(self):
         layout = QVBoxLayout()
@@ -597,6 +650,11 @@ class EmbedWidgetILSC(QWidget):
 
         buttons_layout.addStretch()
 
+        self.help_btn = QPushButton("Help")
+        self.help_btn.setMinimumSize(120, 40)
+        self.help_btn.clicked.connect(self.open_help_in_browser)
+        buttons_layout.addWidget(self.help_btn)
+
         self.embed_btn = QPushButton("Embed")
         self.embed_btn.setMinimumSize(120, 40)
         self.embed_btn.clicked.connect(self.perform_embed)
@@ -643,10 +701,15 @@ class EmbedWidgetILSC(QWidget):
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Error occured while trying to embed:\n{str(e)}")
 
+    def open_help_in_browser(self):
+        webbrowser.open(self.help_url)
+
+
 class ExtractWidgetILSC(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, help_url: str, parent=None):
         super().__init__(parent)
         self.file_path = None
+        self.help_url = help_url
         self.init_ui()
 
     def init_ui(self):
@@ -697,6 +760,11 @@ class ExtractWidgetILSC(QWidget):
 
         buttons_layout.addStretch()
 
+        self.help_btn = QPushButton("Help")
+        self.help_btn.setMinimumSize(120, 40)
+        self.help_btn.clicked.connect(self.open_help_in_browser)
+        buttons_layout.addWidget(self.help_btn)
+
         self.extract_btn = QPushButton("Extract")
         self.extract_btn.setMinimumSize(120, 40)
         self.extract_btn.clicked.connect(self.perform_extract)
@@ -740,10 +808,15 @@ class ExtractWidgetILSC(QWidget):
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Error occured while extracting secret message:\n{str(e)}")
 
+    def open_help_in_browser(self):
+        webbrowser.open(self.help_url)
+
+
 class EmbedWidgetEmails(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, help_url: str, parent=None):
         super().__init__(parent)
         self.init_ui()
+        self.help_url = help_url
 
     def init_ui(self):
         layout = QVBoxLayout()
@@ -785,6 +858,11 @@ class EmbedWidgetEmails(QWidget):
         buttons_layout.addWidget(self.back_btn)
 
         buttons_layout.addStretch()
+
+        self.help_btn = QPushButton("Help")
+        self.help_btn.setMinimumSize(120, 40)
+        self.help_btn.clicked.connect(self.open_help_in_browser)
+        buttons_layout.addWidget(self.help_btn)
 
         self.embed_btn = QPushButton("Embed")
         self.embed_btn.setMinimumSize(120, 40)
@@ -841,12 +919,16 @@ class EmbedWidgetEmails(QWidget):
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Error occured while trying to embed:\n{str(e)}")
 
+    def open_help_in_browser(self):
+        webbrowser.open(self.help_url)
+
 
 class ExtractWidgetEmails(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, help_url: str, parent=None):
         super().__init__(parent)
         self.file_path = None
         self.init_ui()
+        self.help_url = help_url
 
     def init_ui(self):
         layout = QVBoxLayout()
@@ -905,6 +987,11 @@ class ExtractWidgetEmails(QWidget):
 
         buttons_layout.addStretch()
 
+        self.help_btn = QPushButton("Help")
+        self.help_btn.setMinimumSize(120, 40)
+        self.help_btn.clicked.connect(self.open_help_in_browser)
+        buttons_layout.addWidget(self.help_btn)
+
         self.extract_btn = QPushButton("Extract")
         self.extract_btn.setMinimumSize(120, 40)
         self.extract_btn.clicked.connect(self.perform_extract)
@@ -954,11 +1041,15 @@ class ExtractWidgetEmails(QWidget):
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Error occured while extracting secret message:\n{str(e)}")
 
+    def open_help_in_browser(self):
+        webbrowser.open(self.help_url)
+
 
 class EmbedWidgetAITS(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, help_url: str,  parent=None):
         super().__init__(parent)
         self.init_ui()
+        self.help_url = help_url
 
     def init_ui(self):
         layout = QVBoxLayout()
@@ -1019,6 +1110,11 @@ class EmbedWidgetAITS(QWidget):
         buttons_layout.addWidget(self.back_btn)
 
         buttons_layout.addStretch()
+
+        self.help_btn = QPushButton("Help")
+        self.help_btn.setMinimumSize(120, 40)
+        self.help_btn.clicked.connect(self.open_help_in_browser)
+        buttons_layout.addWidget(self.help_btn)
 
         self.embed_btn = QPushButton("Embed")
         self.embed_btn.setMinimumSize(120, 40)
@@ -1083,15 +1179,22 @@ class EmbedWidgetAITS(QWidget):
             "txt (*.txt)"
         )
 
+        if not save_file_path.endswith(".txt"):
+            save_file_path = save_file_path + ".txt"
+
         Path(save_file_path).write_text(self.msg)
 
         QMessageBox.information(self, "Success", f"Message was saved to {save_file_path}!")
 
+    def open_help_in_browser(self):
+        webbrowser.open(self.help_url)
+
 
 class ExtractWidgetAITS(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, help_url: str, parent=None):
         super().__init__(parent)
         self.init_ui()
+        self.help_url = help_url
 
     def init_ui(self):
         layout = QVBoxLayout()
@@ -1154,6 +1257,11 @@ class ExtractWidgetAITS(QWidget):
 
         buttons_layout.addStretch()
 
+        self.help_btn = QPushButton("Help")
+        self.help_btn.setMinimumSize(120, 40)
+        self.help_btn.clicked.connect(self.open_help_in_browser)
+        buttons_layout.addWidget(self.help_btn)
+
         self.extract_btn = QPushButton("Extract")
         self.extract_btn.setMinimumSize(120, 40)
         self.extract_btn.clicked.connect(self.perform_extract)
@@ -1204,11 +1312,15 @@ class ExtractWidgetAITS(QWidget):
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Error occured while extracting secret message:\n{str(e)}")
 
+    def open_help_in_browser(self):
+        webbrowser.open(self.help_url)
+
 
 class EmbedWidgetOG(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, help_url: str, parent=None):
         super().__init__(parent)
         self.init_ui()
+        self.help_url = help_url
 
     def init_ui(self):
         layout = QVBoxLayout()
@@ -1257,6 +1369,11 @@ class EmbedWidgetOG(QWidget):
         buttons_layout.addWidget(self.back_btn)
 
         buttons_layout.addStretch()
+
+        self.help_btn = QPushButton("Help")
+        self.help_btn.setMinimumSize(120, 40)
+        self.help_btn.clicked.connect(self.open_help_in_browser)
+        buttons_layout.addWidget(self.help_btn)
 
         self.embed_btn = QPushButton("Embed")
         self.embed_btn.setMinimumSize(120, 40)
@@ -1313,15 +1430,22 @@ class EmbedWidgetOG(QWidget):
             "txt (*.txt)"
         )
 
+        if not save_file_path.endswith(".txt"):
+            save_file_path = save_file_path + ".txt"
+
         Path(save_file_path).write_text(self.msg)
 
         QMessageBox.information(self, "Success", f"Message was saved to {save_file_path}!")
 
+    def open_help_in_browser(self):
+        webbrowser.open(self.help_url)
+
 
 class ExtractWidgetOG(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, help_url: str,  parent=None):
         super().__init__(parent)
         self.init_ui()
+        self.help_url = help_url
 
     def init_ui(self):
         layout = QVBoxLayout()
@@ -1372,6 +1496,11 @@ class ExtractWidgetOG(QWidget):
 
         buttons_layout.addStretch()
 
+        self.help_btn = QPushButton("Help")
+        self.help_btn.setMinimumSize(120, 40)
+        self.help_btn.clicked.connect(self.open_help_in_browser)
+        buttons_layout.addWidget(self.help_btn)
+
         self.extract_btn = QPushButton("Extract")
         self.extract_btn.setMinimumSize(120, 40)
         self.extract_btn.clicked.connect(self.perform_extract)
@@ -1415,6 +1544,9 @@ class ExtractWidgetOG(QWidget):
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Error occured while extracting secret message:\n{str(e)}")
 
+    def open_help_in_browser(self):
+        webbrowser.open(self.help_url)
+
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -1429,18 +1561,18 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.stack)
 
         self.method_selection = MethodSelectionWidget()
-        self.embed_widget_epa = EmbedWidgetEPA()
-        self.extract_widget_epa = ExtractWidgetEPA()
-        self.embed_widget_us = EmbedWidgetUS()
-        self.extract_widget_us = ExtractWidgetUS()
-        self.embed_widget_ilsc = EmbedWidgetILSC()
-        self.extract_widget_ilsc = ExtractWidgetILSC()
-        self.embed_widget_emails = EmbedWidgetEmails()
-        self.extract_widget_emails = ExtractWidgetEmails()
-        self.embed_widget_aits = EmbedWidgetAITS()
-        self.extract_widget_aits = ExtractWidgetAITS()
-        self.embed_widget_og = EmbedWidgetOG()
-        self.extract_widget_og = ExtractWidgetOG()
+        self.embed_widget_epa = EmbedWidgetEPA(help_url=_get_help_url(num=0))
+        self.extract_widget_epa = ExtractWidgetEPA(help_url=_get_help_url(num=0))
+        self.embed_widget_us = EmbedWidgetUS(help_url=_get_help_url(num=1))
+        self.extract_widget_us = ExtractWidgetUS(help_url=_get_help_url(num=1))
+        self.embed_widget_ilsc = EmbedWidgetILSC(help_url=_get_help_url(num=2))
+        self.extract_widget_ilsc = ExtractWidgetILSC(help_url=_get_help_url(num=2))
+        self.embed_widget_emails = EmbedWidgetEmails(help_url=_get_help_url(num=3))
+        self.extract_widget_emails = ExtractWidgetEmails(help_url=_get_help_url(num=3))
+        self.embed_widget_aits = EmbedWidgetAITS(help_url=_get_help_url(num=4))
+        self.extract_widget_aits = ExtractWidgetAITS(help_url=_get_help_url(num=4))
+        self.embed_widget_og = EmbedWidgetOG(help_url=_get_help_url(num=5))
+        self.extract_widget_og = ExtractWidgetOG(help_url=_get_help_url(num=5))
 
         self.stack.addWidget(self.method_selection)
         self.stack.addWidget(self.embed_widget_epa)

@@ -1422,6 +1422,7 @@ class EmbedWidgetOG(QWidget):
 
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Error occured while trying to embed:\n{str(e)}")
+            return
 
         save_file_path, _ = QFileDialog.getSaveFileName(
             self,
